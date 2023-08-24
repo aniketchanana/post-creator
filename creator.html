@@ -24,6 +24,19 @@
   </body>
   <script>
     const mainContainer = document.getElementById("mainContainer");
-    window.addEventListener("message", console.log);
+    const ELEMENT_TYPE = {
+      BACKGROUND: "BACKGROUND",
+    };
+    const createBgAndApplyStyles = (styleData) => {
+      console.log(styleData);
+    };
+    window.addEventListener("message", ({ data: { data: elementsInfo } }) => {
+      console.log(elementsInfo);
+      Object.entries(elementsInfo).forEach(([elementType, styleData]) => {
+        if (elementType === ELEMENT_TYPE.BACKGROUND) {
+          createBgAndApplyStyles(styleData);
+        }
+      });
+    });
   </script>
 </html>

@@ -2,34 +2,18 @@ import { FC, useState } from "react";
 import { MultiSelect } from "./inputTypes/MultiSelect";
 import { GenericObject } from "./types";
 import { ColorInput } from "./inputTypes/ColorInput";
+import { STYLE_PROPERTY, STYLE_VALUE } from "./constant";
 
-const STYLE_PROPERTY = {
-  backgroundSize: "background-size",
-  backgroundRepeat: "background-repeat",
-  backgroundColor: "background-color",
-  backgroundPosition: "background-position",
-};
-const STYLE_VALUE = {
-  COVER: "cover",
-  CONTAIN: "contain",
-
-  noRepeat: "no-repeat",
-  repeatX: "repeat-x",
-  repeatY: "repeat-y",
-
-  center: "center",
-  top: "top",
-  bottom: "bottom",
+export const initialBgControlsValue = {
+  [STYLE_PROPERTY.backgroundSize]: STYLE_VALUE.CONTAIN,
+  [STYLE_PROPERTY.backgroundRepeat]: STYLE_VALUE.repeatY,
+  [STYLE_PROPERTY.backgroundColor]: "#ffffff",
+  [STYLE_PROPERTY.backgroundPosition]: STYLE_VALUE.center,
 };
 export const BGControls: FC<{
   updateCreativeStyles: (styleObj: any) => void;
 }> = ({ updateCreativeStyles }) => {
-  const [styleObj, setStyleObj] = useState({
-    [STYLE_PROPERTY.backgroundSize]: STYLE_VALUE.CONTAIN,
-    [STYLE_PROPERTY.backgroundRepeat]: STYLE_VALUE.repeatY,
-    [STYLE_PROPERTY.backgroundColor]: "#ffffff",
-    [STYLE_PROPERTY.backgroundPosition]: STYLE_VALUE.center,
-  });
+  const [styleObj, setStyleObj] = useState(initialBgControlsValue);
 
   const updateStyleObj = (key: string, value: string) => {
     const updatedStyles: GenericObject = {
