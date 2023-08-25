@@ -8,6 +8,8 @@ export const STYLE_PROPERTY = {
   backgroundColor: "background-color",
   backgroundPosition: "background-position",
   backgroundImage: "background-image",
+  width: "width",
+  height: "height",
 };
 export const STYLE_VALUE = {
   COVER: "cover",
@@ -20,8 +22,13 @@ export const STYLE_VALUE = {
   center: "center",
   top: "top",
   bottom: "bottom",
+  right: "right",
+  left: "left",
 };
 
-export const ELEMENT_TYPE = {
-  BACKGROUND: "BACKGROUND",
-};
+export enum ELEMENT_TYPE {
+  BACKGROUND = "BACKGROUND",
+  TEXT = "TEXT",
+}
+
+export const SELECTOR_SEPARATOR = "##";

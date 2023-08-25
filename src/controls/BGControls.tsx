@@ -1,14 +1,16 @@
 import { FC, useState } from "react";
-import { MultiSelect } from "./inputTypes/MultiSelect";
-import { GenericObject } from "./types";
-import { ColorInput } from "./inputTypes/ColorInput";
-import { STYLE_PROPERTY, STYLE_VALUE } from "./constant";
+import { MultiSelect } from "../inputTypes/MultiSelect";
+import { GenericObject } from "../types";
+import { ColorInput } from "../inputTypes/ColorInput";
+import { STYLE_PROPERTY, STYLE_VALUE } from "../constant";
 
 export const initialBgControlsValue = {
-  [STYLE_PROPERTY.backgroundSize]: STYLE_VALUE.CONTAIN,
+  [STYLE_PROPERTY.backgroundSize]: STYLE_VALUE.COVER,
   [STYLE_PROPERTY.backgroundRepeat]: STYLE_VALUE.repeatY,
   [STYLE_PROPERTY.backgroundColor]: "#ffffff",
   [STYLE_PROPERTY.backgroundPosition]: STYLE_VALUE.center,
+  [STYLE_PROPERTY.width]: "100%",
+  [STYLE_PROPERTY.height]: "100%",
 };
 export const BGControls: FC<{
   updateCreativeStyles: (styleObj: any) => void;
@@ -25,7 +27,7 @@ export const BGControls: FC<{
   };
 
   return (
-    <div className="h-full ml-2 mt-[120px] gap-4 flex flex-col">
+    <div className="ml-2 gap-4 flex items-start">
       <MultiSelect
         heading="Background size"
         options={[STYLE_VALUE.CONTAIN, STYLE_VALUE.COVER]}
@@ -47,7 +49,13 @@ export const BGControls: FC<{
 
       <MultiSelect
         heading="Background position"
-        options={[STYLE_VALUE.top, STYLE_VALUE.center, STYLE_VALUE.bottom]}
+        options={[
+          STYLE_VALUE.top,
+          STYLE_VALUE.center,
+          STYLE_VALUE.bottom,
+          STYLE_VALUE.right,
+          STYLE_VALUE.left,
+        ]}
         optionKey={STYLE_PROPERTY.backgroundPosition}
         value={styleObj[STYLE_PROPERTY.backgroundPosition]}
         setOption={updateStyleObj}
