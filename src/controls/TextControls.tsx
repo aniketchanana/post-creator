@@ -7,6 +7,7 @@ export const initialTextControlsValue = {
   [STYLE_PROPERTY.value]: "Enter your text here",
   [STYLE_PROPERTY.color]: "#ff00ff",
   [STYLE_PROPERTY.fontSize]: `32px`,
+  [STYLE_PROPERTY.positionTop]: `10px`,
 };
 
 export const TextControls: FC<{

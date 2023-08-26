@@ -1,14 +1,33 @@
 const mainContainer = document.getElementById("mainContainer");
 let selectedTextElement = null;
+
+const postMessageTextBoxSelected = (textBoxId) => {
+  window.parent.postMessage(
+    { type: "TEXT_ELEMENT_SELECTED", data: textBoxId },
+    "*"
+  );
+};
+const postMessageTextUpdated = (elementId, text) => {
+  window.parent.postMessage(
+    {
+      type: "TEXT_ELEMENT_UPDATED",
+      data: { elementId, text },
+    },
+    "*"
+  );
+};
+const postMessageTextDeleted = (elementId) => {
+  window.parent.postMessage(
+    { type: "TEXT_ELEMENT_DELETED", data: elementId },
+    "*"
+  );
+};
 const focusOutOfSelectedTextElement = () => {
   if (selectedTextElement) {
     selectedTextElement.classList.remove("textContainerBoxGuide");
     selectedTextElement.setAttribute("contenteditable", false);
-    window.parent.postMessage(
-      // TODO: catch in react application and set the state
-      { type: "ELEMENT_SELECTED", data: null },
-      "*"
-    );
+    postMessageTextBoxSelected(null);
+    selectedTextElement = null;
   }
 };
 // window.addEventListener("blur", () => {
@@ -19,12 +38,25 @@ mainContainer.addEventListener("click", (e) => {
     focusOutOfSelectedTextElement();
   }
 });
+
+window.addEventListener("keydown", (e) => {
+  if (
+    selectedTextElement &&
+    (e.metaKey || e.ctrlKey) &&
+    (e.key === "Delete" || e.key === "Backspace")
+  ) {
+    e.preventDefault();
+    postMessageTextBoxSelected(null);
+    // postMessageTextDeleted(selectedTextElement); // TODO: Fix the error of dom exception
+    mainContainer.removeChild(selectedTextElement);
+    selectedTextElement = null;
+  }
+});
+
 const ELEMENT_TYPE = {
   BACKGROUND: "BACKGROUND",
   TEXT: "TEXT",
 };
-
-const elementsPool = {};
 
 const createStyleStr = (styleObject) => {
   let styleStr = "";
@@ -38,83 +70,90 @@ const applyStylesToBg = (styleData) => {
   mainContainer.setAttribute("style", createStyleStr(styleData));
 };
 
+const getCursorPosition = (e) => {
+  const box = mainContainer.getBoundingClientRect();
+
+  return { clientX: e.pageX - box.x, clientY: e.pageY - box.y };
+};
+
 const createTextBoxAndAddToMain = (elementId, styleData) => {
-  if (!elementsPool[elementId]) {
-    const textContainer = document.createElement("div");
+  const textContainer = document.createElement("div");
+  textContainer.setAttribute("contenteditable", false);
+  textContainer.setAttribute("id", elementId);
+  textContainer.classList.add("textContainerBox");
+
+  textContainer.addEventListener("click", () => {
+    if (selectedTextElement.id === textContainer.id) {
+      return;
+    }
+    if (!selectedTextElement) {
+      selectedTextElement.classList.remove("textContainerBoxGuide");
+      selectedTextElement = null;
+    }
+    selectedTextElement = textContainer;
+    textContainer.classList.add("textContainerBoxGuide");
+    postMessageTextBoxSelected(elementId);
+  });
+
+  textContainer.addEventListener("keyup", (e) => {
+    postMessageTextUpdated(elementId, e.target.innerText);
+  });
+
+  textContainer.addEventListener("paste", (e) => {
+    e.preventDefault();
+
+    const text = e.clipboardData.getData("text/plain");
+    document.execCommand("insertText", false, text);
+    postMessageTextUpdated(elementId, text);
+  });
+
+  textContainer.addEventListener("dblclick", () => {
+    textContainer.setAttribute("contenteditable", true);
+  });
+
+  textContainer.addEventListener("blur", () => {
+    textContainer.classList.remove("textContainerBoxGuide");
     textContainer.setAttribute("contenteditable", false);
-    textContainer.setAttribute("id", elementId);
-    textContainer.classList.add("textContainerBox");
+    postMessageTextBoxSelected(null);
+    selectedTextElement = null;
+  });
+  const handleMovement = (e) => {
+    const { clientX, clientY } = getCursorPosition(e);
+    textContainer.style.top = `${clientY}px`;
+    textContainer.style.left = `${clientX}px`;
+  };
+  textContainer.addEventListener("mousedown", () => {
+    window.addEventListener("mousemove", handleMovement);
+  });
 
-    textContainer.addEventListener("click", () => {
-      selectedTextElement = textContainer;
-      textContainer.classList.add("textContainerBoxGuide");
-      window.parent.postMessage(
-        // TODO: catch in react application and set the state
-        { type: "ELEMENT_SELECTED", data: elementId },
-        "*"
-      );
-    });
-
-    textContainer.addEventListener("keydown", (e) => {
-      window.parent.postMessage(
-        // TODO: catch in react application and set the state
-        {
-          type: "ELEMENT_TEXT_UPDATED",
-          data: { elementId, text: e.target.innerText },
+  textContainer.addEventListener("mouseup", () => {
+    window.parent.postMessage(
+      {
+        type: "TEXT_UPDATE_POSITION",
+        data: {
+          elementId: elementId,
+          points: {
+            top: textContainer.style.top,
+            left: textContainer.style.left,
+          },
         },
-        "*"
-      );
-    });
+      },
+      "*"
+    );
+    window.removeEventListener("mousemove", handleMovement);
+  });
 
-    textContainer.addEventListener("paste", (e) => {
-      e.preventDefault();
-
-      const text = e.clipboardData.getData("text/plain");
-      document.execCommand("insertText", false, text);
-      window.parent.postMessage(
-        // TODO: catch in react application and set the state
-        {
-          type: "ELEMENT_TEXT_UPDATED",
-          data: { elementId, text },
-        },
-        "*"
-      );
-    });
-
-    textContainer.addEventListener("dblclick", () => {
-      textContainer.setAttribute("contenteditable", true);
-      const range = document.createRange();
-      const sel = window.getSelection();
-
-      range.selectNodeContents(textContainer);
-      range.collapse(false);
-
-      sel.removeAllRanges();
-      sel.addRange(range);
-    });
-
-    textContainer.addEventListener("blur", () => {
-      textContainer.classList.remove("textContainerBoxGuide");
-      textContainer.setAttribute("contenteditable", false);
-      window.parent.postMessage(
-        // TODO: catch in react application and set the state
-        { type: "ELEMENT_SELECTED", data: null },
-        "*"
-      );
-    });
-
-    mainContainer.appendChild(textContainer);
-    window.parent.postMessage({ type: "ELEMENT_CREATED" }, "*");
-
-    elementsPool[elementId] = textContainer;
-  }
-
-  const textBox = elementsPool[elementId];
   const { value = "" } = styleData;
-  textBox.innerText = value;
+  textContainer.innerText = value;
 
   delete styleData.value;
-  textBox.setAttribute("style", createStyleStr(styleData));
+  textContainer.setAttribute("style", createStyleStr(styleData));
+  mainContainer.appendChild(textContainer);
+};
+
+const updateTextBox = (elementId, styleData) => {
+  const textBoxContainer = document.getElementById(elementId);
+  textBoxContainer.setAttribute("style", createStyleStr(styleData));
 };
 
 /**
@@ -134,7 +173,11 @@ window.addEventListener("message", ({ data: { type, data } }) => {
       if (elementType === ELEMENT_TYPE.BACKGROUND) {
         applyStylesToBg(styleData);
       } else if (elementType.startsWith(ELEMENT_TYPE.TEXT)) {
-        createTextBoxAndAddToMain(elementType, styleData);
+        if (document.getElementById(elementType)) {
+          updateTextBox(elementType, styleData);
+        } else {
+          createTextBoxAndAddToMain(elementType, styleData);
+        }
       }
     });
   }

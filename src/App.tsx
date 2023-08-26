@@ -14,31 +14,39 @@ import {
 } from "./controls/TextControls";
 import { getElementId, getElementNumber } from "./utils";
 
-const messageScheduler: GenericObject = {};
-const scheduleMessage = (on: string, callback: (data: any) => void) => {
-  messageScheduler[on] = callback;
-};
 export default function App() {
   const [elementsData, setElementsData] = useState<GenericObject>({});
   const [isEditorActive, setIsEditorActive] = useState(false);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const ref = useRef<HTMLIFrameElement>(null);
 
+  console.log(elementsData);
+
   const addNewElement = (object: GenericObject) => {
-    setElementsData({
+    setElementsData((elementsData) => ({
       ...elementsData,
       ...object,
-    });
+    }));
   };
 
   const updateElement = (elementKey: string, updatedStyles: GenericObject) => {
-    const updatedElementsData = cloneDeep(elementsData);
-    updatedElementsData[elementKey] = {
-      ...updatedElementsData[elementKey],
-      ...updatedStyles,
-    };
+    setElementsData((elementsData) => {
+      const updatedElementsData = cloneDeep(elementsData);
+      updatedElementsData[elementKey] = {
+        ...updatedElementsData[elementKey],
+        ...updatedStyles,
+      };
+      return updatedElementsData;
+    });
+  };
 
-    setElementsData(updatedElementsData);
+  const deleteElement = (elementId: string) => {
+    setElementsData((elementsData) => {
+      const updatedElementsData = cloneDeep(elementsData);
+      delete updatedElementsData[elementId];
+      console.log(updatedElementsData);
+      return updatedElementsData;
+    });
   };
 
   // initial starting point for creative
@@ -64,11 +72,6 @@ export default function App() {
         ...initialTextControlsValue,
       },
     });
-    setSelectedElement(textElementId);
-
-    scheduleMessage("ELEMENT_CREATED", () => {
-      console.log("--Element creation done successfully--");
-    });
   };
 
   const updateTextElementStyles = (
@@ -86,8 +89,16 @@ export default function App() {
     const {
       data: { type, data },
     } = e;
-    if (messageScheduler[type]) {
-      messageScheduler[type](data);
+    if (type === "TEXT_ELEMENT_SELECTED") {
+      setSelectedElement(data);
+    } else if (type === "TEXT_ELEMENT_UPDATED") {
+      const { text, elementId } = data;
+      updateElement(elementId, { value: text });
+    } else if (type === "TEXT_ELEMENT_DELETED") {
+      deleteElement(data);
+    } else if (type === "TEXT_UPDATE_POSITION") {
+      const { elementId, points } = data;
+      updateElement(elementId, points);
     }
   };
 
