@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ELEMENT_TYPE,
   POST_HEIGHT,
   POST_WIDTH,
   STYLE_PROPERTY,
 } from "./constant";
-import { Editor } from "./Editor";
 import { BGControls, initialBgControlsValue } from "./controls/BGControls";
 import { GenericObject } from "./types";
 import { cloneDeep } from "lodash";
@@ -15,19 +14,39 @@ import {
 } from "./controls/TextControls";
 import { getElementId, getElementNumber } from "./utils";
 
+const messageScheduler: GenericObject = {};
+const scheduleMessage = (on: string, callback: (data: any) => void) => {
+  messageScheduler[on] = callback;
+};
 export default function App() {
   const [elementsData, setElementsData] = useState<GenericObject>({});
   const [isEditorActive, setIsEditorActive] = useState(false);
-  const [selectedTextElement, setSelectedTextElement] = useState<string | null>(
-    null
-  );
+  const [selectedElement, setSelectedElement] = useState<string | null>(null);
+  const ref = useRef<HTMLIFrameElement>(null);
+
+  const addNewElement = (object: GenericObject) => {
+    setElementsData({
+      ...elementsData,
+      ...object,
+    });
+  };
+
+  const updateElement = (elementKey: string, updatedStyles: GenericObject) => {
+    const updatedElementsData = cloneDeep(elementsData);
+    updatedElementsData[elementKey] = {
+      ...updatedElementsData[elementKey],
+      ...updatedStyles,
+    };
+
+    setElementsData(updatedElementsData);
+  };
 
   // initial starting point for creative
   const handleFileUpload = (e: any) => {
     const [file] = e.target.files;
     if (file) {
       const src = URL.createObjectURL(file);
-      setElementsData({
+      addNewElement({
         [ELEMENT_TYPE.BACKGROUND]: {
           ...initialBgControlsValue,
           [STYLE_PROPERTY.backgroundImage]: `url(${src})`,
@@ -37,35 +56,52 @@ export default function App() {
     }
   };
 
-  const updateBgStyles = (updatedStyles: GenericObject) => {
-    const updatedElementsData = cloneDeep(elementsData);
-    updatedElementsData[ELEMENT_TYPE.BACKGROUND] = {
-      ...updatedElementsData[ELEMENT_TYPE.BACKGROUND],
-      ...updatedStyles,
-    };
-
-    setElementsData(updatedElementsData);
-  };
-
   const addNewTextElement = () => {
     const elementNumber = getElementNumber(elementsData, ELEMENT_TYPE.TEXT);
     const textElementId = getElementId(ELEMENT_TYPE.TEXT, elementNumber);
-    setElementsData({
+    addNewElement({
       [textElementId]: {
         ...initialTextControlsValue,
       },
     });
-    setSelectedTextElement(textElementId);
+    setSelectedElement(textElementId);
+
+    scheduleMessage("ELEMENT_CREATED", () => {
+      console.log("--Element creation done successfully--");
+    });
   };
 
   const updateTextElementStyles = (
     selectedTextElement: string,
     updatedStyles: GenericObject
   ) => {
-    console.log(selectedTextElement, updatedStyles);
+    updateElement(selectedTextElement, updatedStyles);
   };
 
-  // const addText = () => {};
+  const updateBg = (updatedStyles: GenericObject) => {
+    updateElement(ELEMENT_TYPE.BACKGROUND, updatedStyles);
+  };
+
+  const handleMessageFromIframe = (e: any) => {
+    const {
+      data: { type, data },
+    } = e;
+    if (messageScheduler[type]) {
+      messageScheduler[type](data);
+    }
+  };
+
+  useEffect(() => {
+    ref.current?.contentWindow?.postMessage({
+      type: "UPDATE_CREATIVE",
+      data: elementsData,
+    });
+  }, [elementsData, ref.current?.contentWindow]);
+
+  useEffect(() => {
+    window.addEventListener("message", handleMessageFromIframe);
+    () => window.removeEventListener("message", handleMessageFromIframe);
+  }, []);
 
   return (
     <div className="w-full h-full flex items-start justify-center mt-[60px]">
@@ -77,7 +113,11 @@ export default function App() {
         className="border border-solid border-black box-content flex items-center justify-center"
       >
         <div className={`${isEditorActive ? "block w-full h-full" : "hidden"}`}>
-          <Editor elementsData={elementsData} />
+          <iframe
+            ref={ref}
+            src="/post-creator/creator.html"
+            className="h-full w-full"
+          />
         </div>
         <div className={`${isEditorActive ? "hidden" : "block"}`}>
           <input type="file" name="postCreator" onChange={handleFileUpload} />
@@ -85,12 +125,15 @@ export default function App() {
       </div>
 
       {isEditorActive && (
-        <div className="flex flex-col">
-          <BGControls updateCreativeStyles={updateBgStyles} />
+        <div className="flex flex-col ml-2 gap-4">
+          <BGControls updateCreativeStyles={updateBg} />
           <TextControls
-            selectedTextElement={selectedTextElement}
-            uploadTextElementStyles={updateTextElementStyles}
+            updateTextElementStyles={updateTextElementStyles}
+            selectedTextElement={selectedElement}
             addNewTextElement={addNewTextElement}
+            selectedTextStyles={
+              selectedElement && elementsData[selectedElement]
+            }
           />
         </div>
       )}

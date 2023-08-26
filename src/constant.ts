@@ -10,6 +10,15 @@ export const STYLE_PROPERTY = {
   backgroundImage: "background-image",
   width: "width",
   height: "height",
+  value: "value",
+  color: "color",
+  fontSize: "font-size",
+
+  position: "position",
+  positionTop: "top",
+  positionLeft: "left",
+  positionBottom: "bottom",
+  positionRight: "right",
 };
 export const STYLE_VALUE = {
   COVER: "cover",
@@ -24,6 +33,11 @@ export const STYLE_VALUE = {
   bottom: "bottom",
   right: "right",
   left: "left",
+
+  positionRelative: "relative",
+  positionAbsolute: "absolute",
+
+  distance: "0px",
 };
 
 export enum ELEMENT_TYPE {

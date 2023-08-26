@@ -1,8 +1,8 @@
-const main = document.getElementById("mainContainer");
+const mainContainer = document.getElementById("mainContainer");
 
-// used for initiating id for element
 const ELEMENT_TYPE = {
   BACKGROUND: "BACKGROUND",
+  TEXT: "TEXT",
 };
 
 const elementsPool = {};
@@ -21,24 +21,63 @@ const createStyleStr = (styleObject) => {
   return styleStr;
 };
 
-const createBgAndApplyStyles = (styleData) => {
-  let bgDiv = elementsPool[ELEMENT_TYPE.BACKGROUND];
-  if (!bgDiv) {
-    bgDiv = createNewDiv(ELEMENT_TYPE.BACKGROUND);
-    elementsPool[ELEMENT_TYPE.BACKGROUND] = bgDiv;
-  }
-  bgDiv.setAttribute("style", createStyleStr(styleData));
+const applyStylesToBg = (styleData) => {
+  mainContainer.setAttribute("style", createStyleStr(styleData));
+};
 
-  main.appendChild(bgDiv);
+const getAlignmentGuideBox = (elementId) => {
+  const guideBox = document.createElement("div");
+  guideBox.setAttribute("id", `guide##${elementId}`);
+  guideBox.setAttribute("class", "guide");
+  // const overlayClickHandler = document.createElement("div");
+  // overlayClickHandler.setAttribute("class", "overlayClickHandler");
+  // overlayClickHandler.setAttribute("id", `guideOverlay##${elementId}`);
+  return guideBox;
+};
+
+const createTextBoxAndAddToMain = (elementId, styleData) => {
+  if (!elementsPool[elementId]) {
+    // const alignmentGuideBox = getAlignmentGuideBox(elementId);
+
+    const textContainer = document.createElement("div");
+    textContainer.setAttribute("contenteditable", false);
+    textContainer.setAttribute("id", elementId);
+    textContainer.setAttribute("class", "guide");
+
+    // alignmentGuideBox.appendChild(textContainer);
+    mainContainer.appendChild(textContainer);
+    window.parent.postMessage({ type: "ELEMENT_CREATED" }, "*");
+
+    elementsPool[elementId] = textContainer;
+  }
+
+  const textBox = elementsPool[elementId];
+  const { value = "" } = styleData;
+  textBox.innerText = value;
+
+  delete styleData.value;
+  textBox.setAttribute("style", createStyleStr(styleData));
 };
 
 /**
  * on message from react app
  */
-window.addEventListener("message", ({ data: { data: elementsInfo } }) => {
-  Object.entries(elementsInfo).forEach(([elementType, styleData]) => {
-    if (elementType === ELEMENT_TYPE.BACKGROUND) {
-      createBgAndApplyStyles(styleData);
-    }
-  });
+window.addEventListener("message", ({ data: { type, data } }) => {
+  if (type === "UPDATE_CREATIVE") {
+    /**
+     * data -> format
+     * {
+     *  [ELEMENT_TYPE]: {
+     *  ...
+     * }
+     * }
+     */
+    Object.entries(data).forEach(([elementType, styleData]) => {
+      if (elementType === ELEMENT_TYPE.BACKGROUND) {
+        applyStylesToBg(styleData);
+      } else if (elementType.startsWith(ELEMENT_TYPE.TEXT)) {
+        createTextBoxAndAddToMain(elementType, styleData);
+      }
+    });
+  }
 });

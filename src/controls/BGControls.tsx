@@ -11,6 +11,7 @@ export const initialBgControlsValue = {
   [STYLE_PROPERTY.backgroundPosition]: STYLE_VALUE.center,
   [STYLE_PROPERTY.width]: "100%",
   [STYLE_PROPERTY.height]: "100%",
+  [STYLE_PROPERTY.position]: STYLE_VALUE.positionRelative,
 };
 export const BGControls: FC<{
   updateCreativeStyles: (styleObj: any) => void;
@@ -27,7 +28,7 @@ export const BGControls: FC<{
   };
 
   return (
-    <div className="ml-2 gap-4 flex items-start">
+    <div className="gap-4 flex items-start">
       <MultiSelect
         heading="Background size"
         options={[STYLE_VALUE.CONTAIN, STYLE_VALUE.COVER]}
