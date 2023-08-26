@@ -11,9 +11,9 @@ const focusOutOfSelectedTextElement = () => {
     );
   }
 };
-window.addEventListener("blur", () => {
-  focusOutOfSelectedTextElement();
-});
+// window.addEventListener("blur", () => {
+//   focusOutOfSelectedTextElement();
+// });
 mainContainer.addEventListener("click", (e) => {
   if (e.target.id === "mainContainer") {
     focusOutOfSelectedTextElement();
