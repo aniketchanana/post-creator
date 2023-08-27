@@ -21,14 +21,6 @@ body {
   border: 1px solid blue;
 }
 
-/* .textContainerBox::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 40px;
-  background-color: red;
-} */
 .textContainerBoxGuide {
   border: 1px solid blue;
 }
