@@ -61,7 +61,9 @@ const ELEMENT_TYPE = {
 const createStyleStr = (styleObject) => {
   let styleStr = "";
   Object.entries(styleObject).forEach(([styleType, styleValue]) => {
-    styleStr += `${styleType}: ${styleValue};`;
+    if (styleType !== "value") {
+      styleStr += `${styleType}: ${styleValue};`;
+    }
   });
   return styleStr;
 };
@@ -123,11 +125,20 @@ const createTextBoxAndAddToMain = (elementId, styleData) => {
 
   textContainer.addEventListener("mousedown", () => {
     textContainer.click();
-
+    mainContainer.childNodes.forEach((childNode) => {
+      if (!childNode.classList.contains("textContainerBoxGuide")) {
+        childNode.classList.add("pointerEventsNone");
+      }
+    });
     window.addEventListener("mousemove", handleMovement);
   });
 
   textContainer.addEventListener("mouseup", () => {
+    mainContainer.childNodes.forEach((childNode) => {
+      if (childNode.classList.contains("pointerEventsNone")) {
+        childNode.classList.remove("pointerEventsNone");
+      }
+    });
     window.parent.postMessage(
       {
         type: "TEXT_UPDATE_POSITION",
