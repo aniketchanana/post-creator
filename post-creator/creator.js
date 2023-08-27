@@ -83,10 +83,7 @@ const createTextBoxAndAddToMain = (elementId, styleData) => {
   textContainer.classList.add("textContainerBox");
 
   textContainer.addEventListener("click", () => {
-    if (selectedTextElement.id === textContainer.id) {
-      return;
-    }
-    if (!selectedTextElement) {
+    if (selectedTextElement) {
       selectedTextElement.classList.remove("textContainerBoxGuide");
       selectedTextElement = null;
     }
@@ -117,12 +114,16 @@ const createTextBoxAndAddToMain = (elementId, styleData) => {
     postMessageTextBoxSelected(null);
     selectedTextElement = null;
   });
+
   const handleMovement = (e) => {
     const { clientX, clientY } = getCursorPosition(e);
     textContainer.style.top = `${clientY}px`;
     textContainer.style.left = `${clientX}px`;
   };
+
   textContainer.addEventListener("mousedown", () => {
+    textContainer.click();
+
     window.addEventListener("mousemove", handleMovement);
   });
 
