@@ -29,3 +29,6 @@ body {
   pointer-events: none;
   user-select: none;
 }
+div[contenteditable="false"] {
+  user-select: none;
+}
