@@ -62,7 +62,9 @@ const createStyleStr = (styleObject) => {
   let styleStr = "";
   Object.entries(styleObject).forEach(([styleType, styleValue]) => {
     if (styleType !== "value") {
-      styleStr += `${styleType}: ${styleValue};`;
+      styleStr += `${styleType}: ${
+        styleType === "font-size" ? `${styleValue}px` : styleValue
+      };`;
     }
   });
   return styleStr;

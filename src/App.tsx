@@ -20,8 +20,6 @@ export default function App() {
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const ref = useRef<HTMLIFrameElement>(null);
 
-  console.log(elementsData);
-
   const addNewElement = (object: GenericObject) => {
     setElementsData((elementsData) => ({
       ...elementsData,

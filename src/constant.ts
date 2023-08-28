@@ -13,6 +13,7 @@ export const STYLE_PROPERTY = {
   value: "value",
   color: "color",
   fontSize: "font-size",
+  fontFamily: "font-family",
 
   position: "position",
   positionTop: "top",
