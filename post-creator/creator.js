@@ -72,10 +72,15 @@ const applyStylesToBg = (styleData) => {
   mainContainer.setAttribute("style", createStyleStr(styleData));
 };
 
-const getCursorPosition = (e) => {
+const getPositionWithRespectToMain = (e) => {
   const box = mainContainer.getBoundingClientRect();
 
   return { clientX: e.pageX - box.x, clientY: e.pageY - box.y };
+};
+const getPositionOfBoxWithRespectToMain = (textContainer) => {
+  const mainBox = mainContainer.getBoundingClientRect();
+  const textBox = textContainer.getBoundingClientRect();
+  return { clientX: textBox.x - mainBox.x, clientY: textBox.y - mainBox.y };
 };
 
 const createTextBoxAndAddToMain = (elementId, styleData) => {
@@ -118,22 +123,40 @@ const createTextBoxAndAddToMain = (elementId, styleData) => {
   });
 
   const handleMovement = (e) => {
-    const { clientX, clientY } = getCursorPosition(e);
-    textContainer.style.top = `${clientY}px`;
-    textContainer.style.left = `${clientX}px`;
+    const xStart = +textContainer.getAttribute("data-clientXUserGrab");
+    const yStart = +textContainer.getAttribute("data-clientYUserGrab");
+    const clientX = +textContainer.getAttribute("data-clientX");
+    const clientY = +textContainer.getAttribute("data-clientY");
+
+    const { clientX: xEnd, clientY: yEnd } = getPositionWithRespectToMain(e);
+    const deltaX = xEnd - xStart;
+    const deltaY = yEnd - yStart;
+
+    textContainer.style.left = `${clientX + deltaX}px`;
+    textContainer.style.top = `${clientY + deltaY}px`;
   };
 
-  textContainer.addEventListener("mousedown", () => {
+  textContainer.addEventListener("mousedown", (e) => {
     textContainer.click();
     mainContainer.childNodes.forEach((childNode) => {
       if (!childNode.classList.contains("textContainerBoxGuide")) {
         childNode.classList.add("pointerEventsNone");
       }
     });
+    const { clientX, clientY } = getPositionWithRespectToMain(e);
+    const { clientX: _clientX, clientY: _clientY } =
+      getPositionOfBoxWithRespectToMain(textContainer);
+
+    textContainer.setAttribute("data-clientXUserGrab", clientX);
+    textContainer.setAttribute("data-clientYUserGrab", clientY);
+    textContainer.setAttribute("data-clientX", _clientX);
+    textContainer.setAttribute("data-clientY", _clientY);
     window.addEventListener("mousemove", handleMovement);
   });
 
   textContainer.addEventListener("mouseup", () => {
+    window.removeEventListener("mousemove", handleMovement);
+
     mainContainer.childNodes.forEach((childNode) => {
       if (childNode.classList.contains("pointerEventsNone")) {
         childNode.classList.remove("pointerEventsNone");
@@ -152,7 +175,6 @@ const createTextBoxAndAddToMain = (elementId, styleData) => {
       },
       "*"
     );
-    window.removeEventListener("mousemove", handleMovement);
   });
 
   const { value = "" } = styleData;
