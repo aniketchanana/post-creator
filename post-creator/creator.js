@@ -47,7 +47,7 @@ window.addEventListener("keydown", (e) => {
   ) {
     e.preventDefault();
     postMessageTextBoxSelected(null);
-    // postMessageTextDeleted(selectedTextElement); // TODO: Fix the error of dom exception
+    postMessageTextDeleted(selectedTextElement.id); // TODO: Fix the error of dom exception
     mainContainer.removeChild(selectedTextElement);
     selectedTextElement = null;
   }
@@ -138,11 +138,6 @@ const createTextBoxAndAddToMain = (elementId, styleData) => {
 
   textContainer.addEventListener("mousedown", (e) => {
     textContainer.click();
-    // mainContainer.childNodes.forEach((childNode) => {
-    //   if (!childNode.classList.contains("textContainerBoxGuide")) {
-    //     childNode.classList.add("pointerEventsNone");
-    //   }
-    // });
     const { clientX, clientY } = getPositionWithRespectToMain(e);
     const { clientX: _clientX, clientY: _clientY } =
       getPositionOfBoxWithRespectToMain(textContainer);
@@ -156,12 +151,6 @@ const createTextBoxAndAddToMain = (elementId, styleData) => {
 
   textContainer.addEventListener("mouseup", () => {
     window.removeEventListener("mousemove", handleMovement);
-
-    // mainContainer.childNodes.forEach((childNode) => {
-    //   if (childNode.classList.contains("pointerEventsNone")) {
-    //     childNode.classList.remove("pointerEventsNone");
-    //   }
-    // });
     window.parent.postMessage(
       {
         type: "TEXT_UPDATE_POSITION",

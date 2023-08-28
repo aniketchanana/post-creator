@@ -44,7 +44,6 @@ export default function App() {
     setElementsData((elementsData) => {
       const updatedElementsData = cloneDeep(elementsData);
       delete updatedElementsData[elementId];
-      console.log(updatedElementsData);
       return updatedElementsData;
     });
   };
